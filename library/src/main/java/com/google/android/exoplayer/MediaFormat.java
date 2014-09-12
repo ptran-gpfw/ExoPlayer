@@ -191,7 +191,11 @@ public class MediaFormat {
     if (frameworkMediaFormat == null) {
       android.media.MediaFormat format = new android.media.MediaFormat();
       format.setString(android.media.MediaFormat.KEY_MIME, mimeType);
-      maybeSetIntegerV16(format, android.media.MediaFormat.KEY_MAX_INPUT_SIZE, maxInputSize);
+      //Workaround assertion seen on Samsung Galaxy Nexus v4.2.2
+      //https://android.googlesource.com/platform/frameworks/av/+/android-4.2.2_r1.1/media/libstagefright/ACodec.cpp#1050
+      if (Util.SDK_INT >= 18) {
+        maybeSetIntegerV16(format, android.media.MediaFormat.KEY_MAX_INPUT_SIZE, maxInputSize);
+      }
       maybeSetIntegerV16(format, android.media.MediaFormat.KEY_WIDTH, width);
       maybeSetIntegerV16(format, android.media.MediaFormat.KEY_HEIGHT, height);
       maybeSetIntegerV16(format, android.media.MediaFormat.KEY_CHANNEL_COUNT, channelCount);
