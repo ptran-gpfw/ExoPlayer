@@ -202,8 +202,8 @@ public final class CodecSpecificDataUtil {
     // - Constraint bits (3 bits)
     // - Reserved bits (5 bits)
     // - Level idx (8 bits)
-    if (isNalStartCode(spsNalUnit, 0) && spsNalUnit.length == 8
-        && (spsNalUnit[5] & 0x1F) == SPS_NAL_UNIT_TYPE) {
+    if (isNalStartCode(spsNalUnit, 0)
+        && (spsNalUnit[4] & 0x1F) == SPS_NAL_UNIT_TYPE) {
       return Pair.create(parseAvcProfile(spsNalUnit), parseAvcLevel(spsNalUnit));
     }
     return null;
@@ -211,7 +211,7 @@ public final class CodecSpecificDataUtil {
 
   @SuppressLint("InlinedApi")
   private static int parseAvcProfile(byte[] data) {
-    int profileIdc = data[6] & 0xFF;
+    int profileIdc = data[5] & 0xFF;
     switch (profileIdc) {
       case 0x42:
         return CodecProfileLevel.AVCProfileBaseline;
@@ -234,7 +234,7 @@ public final class CodecSpecificDataUtil {
 
   @SuppressLint("InlinedApi")
   private static int parseAvcLevel(byte[] data) {
-    int levelIdc = data[8] & 0xFF;
+    int levelIdc = data[7] & 0xFF;
     switch (levelIdc) {
       case 9:
         return CodecProfileLevel.AVCLevel1b;

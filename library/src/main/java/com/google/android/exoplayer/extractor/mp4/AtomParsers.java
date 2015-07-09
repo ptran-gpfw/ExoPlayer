@@ -15,6 +15,9 @@
  */
 package com.google.android.exoplayer.extractor.mp4;
 
+import android.util.Log;
+import android.util.Pair;
+
 import com.google.android.exoplayer.C;
 import com.google.android.exoplayer.MediaFormat;
 import com.google.android.exoplayer.util.Ac3Util;
@@ -24,8 +27,6 @@ import com.google.android.exoplayer.util.H264Util;
 import com.google.android.exoplayer.util.MimeTypes;
 import com.google.android.exoplayer.util.ParsableByteArray;
 import com.google.android.exoplayer.util.Util;
-
-import android.util.Pair;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -401,7 +402,12 @@ import java.util.List;
     // expose the AVC profile and level somewhere useful; Most likely in MediaFormat.
     int numSequenceParameterSets = parent.readUnsignedByte() & 0x1F;
     for (int j = 0; j < numSequenceParameterSets; j++) {
-      initializationData.add(H264Util.parseChildNalUnit(parent));
+      final byte[] spsNalUnit = H264Util.parseChildNalUnit(parent);
+      final Pair<Integer, Integer> spsPair = CodecSpecificDataUtil.parseSpsNalUnit(spsNalUnit);
+      if(spsPair != null) {
+        Log.d("atom", "sps profile/level," + spsPair.first +","+ spsPair.second);
+      }
+      initializationData.add(spsNalUnit);
     }
     int numPictureParameterSets = parent.readUnsignedByte();
     for (int j = 0; j < numPictureParameterSets; j++) {

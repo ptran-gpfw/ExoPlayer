@@ -15,12 +15,6 @@
  */
 package com.google.android.exoplayer;
 
-import com.google.android.exoplayer.MediaCodecUtil.DecoderQueryException;
-import com.google.android.exoplayer.drm.DrmInitData;
-import com.google.android.exoplayer.drm.DrmSessionManager;
-import com.google.android.exoplayer.util.Assertions;
-import com.google.android.exoplayer.util.Util;
-
 import android.annotation.TargetApi;
 import android.media.MediaCodec;
 import android.media.MediaCodec.CodecException;
@@ -28,6 +22,12 @@ import android.media.MediaCodec.CryptoException;
 import android.media.MediaCrypto;
 import android.os.Handler;
 import android.os.SystemClock;
+
+import com.google.android.exoplayer.MediaCodecUtil.DecoderQueryException;
+import com.google.android.exoplayer.drm.DrmInitData;
+import com.google.android.exoplayer.drm.DrmSessionManager;
+import com.google.android.exoplayer.util.Assertions;
+import com.google.android.exoplayer.util.Util;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -534,6 +534,7 @@ public abstract class MediaCodecTrackRenderer extends TrackRenderer {
     waitingForFirstSyncFrame = true;
     waitingForKeys = false;
     decodeOnlyPresentationTimestamps.clear();
+    mQueuedCount = 0;
     // Workaround for framework bugs.
     // See [Internal: b/8347958], [Internal: b/8578467], [Internal: b/8543366].
     if (Util.SDK_INT >= 18 && codecReinitializationState == REINITIALIZATION_STATE_NONE) {
@@ -550,6 +551,7 @@ public abstract class MediaCodecTrackRenderer extends TrackRenderer {
     }
   }
 
+  private volatile int mQueuedCount;
   /**
    * @param firstFeed True if this is the first call to this method from the current invocation of
    *     {@link #doSomeWork(long, long)}. False otherwise.
@@ -578,6 +580,8 @@ public abstract class MediaCodecTrackRenderer extends TrackRenderer {
       // We need to re-initialize the codec. Send an end of stream signal to the existing codec so
       // that it outputs any remaining buffers before we release it.
       codec.queueInputBuffer(inputIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
+      ++mQueuedCount;
+
       inputIndex = -1;
       codecReinitializationState = REINITIALIZATION_STATE_WAIT_END_OF_STREAM;
       return false;
@@ -631,6 +635,7 @@ public abstract class MediaCodecTrackRenderer extends TrackRenderer {
       inputStreamEnded = true;
       try {
         codec.queueInputBuffer(inputIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
+        ++mQueuedCount;
         inputIndex = -1;
       } catch (CryptoException e) {
         notifyCryptoError(e);
@@ -670,6 +675,7 @@ public abstract class MediaCodecTrackRenderer extends TrackRenderer {
         codec.queueSecureInputBuffer(inputIndex, 0, cryptoInfo, presentationTimeUs, 0);
       } else {
         codec.queueInputBuffer(inputIndex, 0 , bufferSize, presentationTimeUs, 0);
+        ++mQueuedCount;
       }
       inputIndex = -1;
       codecHasQueuedBuffers = true;
@@ -817,6 +823,7 @@ public abstract class MediaCodecTrackRenderer extends TrackRenderer {
 
     if (outputIndex < 0) {
       outputIndex = codec.dequeueOutputBuffer(outputBufferInfo, getDequeueOutputBufferTimeoutUs());
+      --mQueuedCount;
     }
 
     if (outputIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
