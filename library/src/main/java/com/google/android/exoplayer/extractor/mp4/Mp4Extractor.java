@@ -15,6 +15,8 @@
  */
 package com.google.android.exoplayer.extractor.mp4;
 
+import android.util.Log;
+
 import com.google.android.exoplayer.extractor.Extractor;
 import com.google.android.exoplayer.extractor.ExtractorInput;
 import com.google.android.exoplayer.extractor.ExtractorOutput;
@@ -68,10 +70,13 @@ public final class Mp4Extractor implements Extractor, SeekMap {
   // Extractor outputs.
   private ExtractorOutput extractorOutput;
   private Mp4Track[] tracks;
+  private ContainerAtom currContainer;
 
   public Mp4Extractor() {
     atomHeader = new ParsableByteArray(Atom.LONG_HEADER_SIZE);
     containerAtoms = new Stack<Atom.ContainerAtom>();
+    currContainer = new ContainerAtom(Atom.TYPE_unkn, 0);
+    containerAtoms.add(currContainer);
     nalStartCode = new ParsableByteArray(H264Util.NAL_START_CODE);
     nalLength = new ParsableByteArray(4);
     parserState = STATE_READING_ATOM_HEADER;
@@ -157,16 +162,15 @@ public final class Mp4Extractor implements Extractor, SeekMap {
       atomBytesRead = Atom.HEADER_SIZE;
     }
 
-    if (shouldParseContainerAtom(atomType)) {
+    if (shouldParseContainerAtom(atomType, atomSize)) {
+      currContainer = new ContainerAtom(atomType, rootAtomBytesRead + atomSize - atomBytesRead);
       if (atomSize == Atom.LONG_SIZE_PREFIX) {
-        containerAtoms.add(
-            new ContainerAtom(atomType, rootAtomBytesRead + atomSize - atomBytesRead));
+        containerAtoms.add(currContainer);
       } else {
-        containerAtoms.add(
-            new ContainerAtom(atomType, rootAtomBytesRead + atomSize - atomBytesRead));
+        containerAtoms.add(currContainer);
       }
       parserState = STATE_READING_ATOM_HEADER;
-    } else if (shouldParseLeafAtom(atomType)) {
+    } else if (shouldParseLeafAtom(atomType, atomSize)) {
       Assertions.checkState(atomSize < Integer.MAX_VALUE);
       atomData = new ParsableByteArray((int) atomSize);
       System.arraycopy(atomHeader.data, 0, atomData.data, 0, Atom.HEADER_SIZE);
@@ -206,8 +210,16 @@ public final class Mp4Extractor implements Extractor, SeekMap {
       Atom.ContainerAtom containerAtom = containerAtoms.pop();
       if (containerAtom.type == Atom.TYPE_moov) {
         processMoovAtom(containerAtom);
-      } else if (!containerAtoms.isEmpty()) {
+        //Log.d("atom", containerAtom.toString());
+      }
+      else if(containerAtom.type == Atom.TYPE_unkn) {
+        Log.d("atom", containerAtom.toString());
+      }
+      else if (!containerAtoms.isEmpty()) {
         containerAtoms.peek().add(containerAtom);
+      }
+      if(containerAtoms.isEmpty()) {
+        Log.d("atom", containerAtom.toString());
       }
     }
 
@@ -353,18 +365,24 @@ public final class Mp4Extractor implements Extractor, SeekMap {
   }
 
   /** Returns whether the extractor should parse a leaf atom with type {@code atom}. */
-  private static boolean shouldParseLeafAtom(int atom) {
-    return atom == Atom.TYPE_mdhd || atom == Atom.TYPE_mvhd || atom == Atom.TYPE_hdlr
-        || atom == Atom.TYPE_vmhd || atom == Atom.TYPE_smhd || atom == Atom.TYPE_stsd
-        || atom == Atom.TYPE_avc1 || atom == Atom.TYPE_avcC || atom == Atom.TYPE_mp4a
-        || atom == Atom.TYPE_esds || atom == Atom.TYPE_stts || atom == Atom.TYPE_stss
-        || atom == Atom.TYPE_ctts || atom == Atom.TYPE_stsc || atom == Atom.TYPE_stsz
-        || atom == Atom.TYPE_stco || atom == Atom.TYPE_co64 || atom == Atom.TYPE_tkhd;
+  private static boolean shouldParseLeafAtom(int atom, long size) {
+    Log.d("atom", "leaf hex/size," + Integer.toHexString(atom) +","+ size);
+//    if(atom == 20131018) { return false; }
+    return size <= (64L*1024L);
+//            atom == Atom.TYPE_mdhd || atom == Atom.TYPE_mvhd || atom == Atom.TYPE_hdlr
+//        || atom == Atom.TYPE_vmhd || atom == Atom.TYPE_smhd || atom == Atom.TYPE_stsd
+//        || atom == Atom.TYPE_avc1 || atom == Atom.TYPE_avcC || atom == Atom.TYPE_mp4a
+//        || atom == Atom.TYPE_esds || atom == Atom.TYPE_stts || atom == Atom.TYPE_stss
+//        || atom == Atom.TYPE_ctts || atom == Atom.TYPE_stsc || atom == Atom.TYPE_stsz
+//        || atom == Atom.TYPE_stco || atom == Atom.TYPE_co64 || atom == Atom.TYPE_tkhd;
   }
 
   /** Returns whether the extractor should parse a container atom with type {@code atom}. */
-  private static boolean shouldParseContainerAtom(int atom) {
-    return atom == Atom.TYPE_moov || atom == Atom.TYPE_trak || atom == Atom.TYPE_mdia
+  private static boolean shouldParseContainerAtom(int atom, long size) {
+    Log.d("atom", "cont hex/size," + Integer.toHexString(atom) +","+ size);
+//    if(atom == 20131018) { return false; }
+    return
+            atom == Atom.TYPE_moov || atom == Atom.TYPE_trak || atom == Atom.TYPE_mdia
         || atom == Atom.TYPE_minf || atom == Atom.TYPE_stbl;
   }
 

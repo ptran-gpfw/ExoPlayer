@@ -19,7 +19,6 @@ import com.google.android.exoplayer.util.ParsableByteArray;
 import com.google.android.exoplayer.util.Util;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /* package*/ abstract class Atom {
@@ -88,6 +87,7 @@ import java.util.List;
   public static final int TYPE_stsz = Util.getIntegerCodeForString("stsz");
   public static final int TYPE_stco = Util.getIntegerCodeForString("stco");
   public static final int TYPE_co64 = Util.getIntegerCodeForString("co64");
+  public static final int TYPE_unkn = Util.getIntegerCodeForString("unkn");
 
   public final int type;
 
@@ -110,6 +110,12 @@ import java.util.List;
       this.data = data;
     }
 
+    @Override
+    public String toString() {
+      return "\"" + super.toString() +"\" : {"
+              + "\"datalen\": " + data.limit()
+              + "\n}";
+    }
   }
 
   /** An MP4 atom that has child atoms. */
@@ -159,11 +165,30 @@ import java.util.List;
 
     @Override
     public String toString() {
-      return getAtomTypeString(type)
-          + " leaves: " + Arrays.toString(leafChildren.toArray(new LeafAtom[0]))
-          + " containers: " + Arrays.toString(containerChildren.toArray(new ContainerAtom[0]));
+      return "\n\"" + getAtomTypeString(type) +"\": {\n"
+          + "\n  \"leaves\": " + braceString(leafChildren.toArray(new LeafAtom[0]))
+          + ",\n  \"containers\": " + braceString(containerChildren.toArray(new ContainerAtom[0]))
+              + "\n}";
     }
 
+  }
+
+  public static String braceString(Object[] array) {
+    if (array == null) {
+      return "null";
+    }
+    if (array.length == 0) {
+      return "{}";
+    }
+    StringBuilder sb = new StringBuilder(array.length * 7);
+    sb.append('{');
+    sb.append(array[0]);
+    for (int i = 1; i < array.length; i++) {
+      sb.append(", ");
+      sb.append(array[i]);
+    }
+    sb.append('}');
+    return sb.toString();
   }
 
   /**
