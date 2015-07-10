@@ -38,12 +38,16 @@ android {
     lintOptions {
         abortOnError false
     }
+    packagingOptions {
+        exclude 'LICENSE.txt'
+    }
 }
 
 dependencies {
     androidTestCompile(
         'junit:junit:4.12',
-        'org.mockito:mockito-core:1.9.5'
+        'org.mockito:mockito-core:1.9.5',
+        'com.googlecode.mp4parser:isoparser:1.0.6'
     )
 }
 

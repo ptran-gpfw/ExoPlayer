@@ -210,7 +210,7 @@ public final class Mp4Extractor implements Extractor, SeekMap {
       Atom.ContainerAtom containerAtom = containerAtoms.pop();
       if (containerAtom.type == Atom.TYPE_moov) {
         processMoovAtom(containerAtom);
-        //Log.d("atom", containerAtom.toString());
+        Log.d("atom", containerAtom.toString());
       }
       else if(containerAtom.type == Atom.TYPE_unkn) {
         Log.d("atom", containerAtom.toString());
