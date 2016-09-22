@@ -497,7 +497,7 @@ public class MediaCodecVideoTrackRenderer extends MediaCodecTrackRenderer {
   }
 
   @SuppressLint("InlinedApi")
-  private void maybeSetMaxInputSize(android.media.MediaFormat format, boolean codecIsAdaptive) {
+  protected void maybeSetMaxInputSize(android.media.MediaFormat format, boolean codecIsAdaptive) {
     if (format.containsKey(android.media.MediaFormat.KEY_MAX_INPUT_SIZE)) {
       // Already set. The source of the format may know better, so do nothing.
       return;
