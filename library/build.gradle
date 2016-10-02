@@ -26,6 +26,7 @@ android {
         // greater.
         minSdkVersion 9
         targetSdkVersion 23
+        renderscriptTargetApi 18
     }
 
     buildTypes {
