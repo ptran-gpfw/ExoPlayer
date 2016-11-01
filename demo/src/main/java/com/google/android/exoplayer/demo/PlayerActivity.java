@@ -56,6 +56,7 @@ import com.google.android.exoplayer.demo.player.DemoPlayer.RendererBuilder;
 import com.google.android.exoplayer.demo.player.ExtractorRendererBuilder;
 import com.google.android.exoplayer.demo.player.HlsRendererBuilder;
 import com.google.android.exoplayer.demo.player.SmoothStreamingRendererBuilder;
+import com.google.android.exoplayer.demo.player.VideoSpeedRendererBuilder;
 import com.google.android.exoplayer.drm.UnsupportedDrmException;
 import com.google.android.exoplayer.metadata.id3.ApicFrame;
 import com.google.android.exoplayer.metadata.id3.GeobFrame;
@@ -336,7 +337,8 @@ public class PlayerActivity extends Activity implements SurfaceHolder.Callback, 
       case Util.TYPE_HLS:
         return new HlsRendererBuilder(this, userAgent, contentUri.toString());
       case Util.TYPE_OTHER:
-        return new ExtractorRendererBuilder(this, userAgent, contentUri);
+//        return new ExtractorRendererBuilder(this, userAgent, contentUri);
+        return new VideoSpeedRendererBuilder(this, userAgent, contentUri);
       default:
         throw new IllegalStateException("Unsupported type: " + contentType);
     }

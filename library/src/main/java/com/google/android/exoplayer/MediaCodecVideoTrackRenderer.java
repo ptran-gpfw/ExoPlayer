@@ -413,9 +413,11 @@ public class MediaCodecVideoTrackRenderer extends MediaCodecTrackRenderer {
     long systemTimeNs = System.nanoTime();
     long unadjustedFrameReleaseTimeNs = systemTimeNs + (earlyUs * 1000);
 
-    // Apply a timestamp adjustment, if there is one.
-    long adjustedReleaseTimeNs = frameReleaseTimeHelper.adjustReleaseTime(
-        bufferInfo.presentationTimeUs, unadjustedFrameReleaseTimeNs);
+//    // Apply a timestamp adjustment, if there is one.
+//    long adjustedReleaseTimeNs = frameReleaseTimeHelper.adjustReleaseTime(
+//        bufferInfo.presentationTimeUs, unadjustedFrameReleaseTimeNs);
+    long adjustedReleaseTimeNs = unadjustedFrameReleaseTimeNs;
+
     earlyUs = (adjustedReleaseTimeNs - systemTimeNs) / 1000;
 
     if (earlyUs < -30000) {
