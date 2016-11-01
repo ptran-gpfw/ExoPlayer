@@ -81,6 +81,6 @@ public class ClockRenderer extends TrackRenderer {
 
     @Override
     protected void seekTo(long positionUs) throws ExoPlaybackException {
-
+        mClock.setPositionUs(positionUs);
     }
 }
