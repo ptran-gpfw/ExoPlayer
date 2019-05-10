@@ -82,6 +82,10 @@ public class DemoApplication extends Application {
   }
 
   public RenderersFactory buildRenderersFactory(boolean preferExtensionRenderer) {
+    return buildRenderersFactory(preferExtensionRenderer, false);
+  }
+
+    public RenderersFactory buildRenderersFactory(boolean preferExtensionRenderer, boolean useSamsungSwAvcDecoder) {
     @DefaultRenderersFactory.ExtensionRendererMode
     int extensionRendererMode =
         useExtensionRenderers()
@@ -89,8 +93,14 @@ public class DemoApplication extends Application {
                 ? DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER
                 : DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
             : DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF;
-    return new DefaultRenderersFactory(/* context= */ this)
+    DefaultRenderersFactory factory = new DefaultRenderersFactory(/* context= */ this)
         .setExtensionRendererMode(extensionRendererMode);
+
+    if (useSamsungSwAvcDecoder) {
+      factory.setMediaCodecSelector(new SwCodecSelector());
+    }
+
+    return factory;
   }
 
   public DownloadManager getDownloadManager() {
